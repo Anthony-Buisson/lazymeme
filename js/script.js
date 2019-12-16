@@ -3,9 +3,7 @@ function Xhr(){                // création d'un requete HTTP en fonction du nav
     try { obj = new ActiveXObject("Microsoft.XMLHTTP");}
     catch(Error) { try { obj = new ActiveXObject("MSXML2.XMLHTTP");}
     catch(Error) { try { obj = new XMLHttpRequest();}
-    catch(Error) { alert(' Impossible de créer l\'objet XMLHttpRequest')}
-    }
-    }
+    catch(Error) { alert(' Impossible de créer l\'objet XMLHttpRequest')}}}
     return obj;
 }
 
@@ -26,9 +24,11 @@ function update(memes){
         // console.log(meme.url);
         let img_container = document.createElement('div');
         let image = document.createElement('img');
-        image.src = meme.url;
+        image.dataset.src = meme.url;
+        image.src = '';
         image.className = 'lazy-image';
         image.style.width = '100%';
+        image.style.minHeight = '100px';
         // image.loading = "lazy";                                      //Désormais natif sur Chrome et Firefox
         img_container.style.width = random(200,500)+"px";
         img_container.className='image';
@@ -36,11 +36,7 @@ function update(memes){
         img_container.appendChild(image);
         container.appendChild(img_container);
     });
-
-    let lazyImages = [...document.querySelectorAll('.lazy-image')];
-    let inAdvance = 300;
-    console.log(lazyImages);
-    lazyLoad(lazyImages);
+    throttle(lazyLoad(), 100);
 
     window.addEventListener('scroll', lazyLoad);
     window.addEventListener('resize', lazyLoad);
@@ -49,14 +45,22 @@ function update(memes){
 function random(min, max) {
     return Math.floor(Math.random() * (max+1 - min) + min);
 }
-function lazyLoad(lazyImages) {
+function lazyLoad() {
+    let lazyImages = [...document.querySelectorAll('.lazy-image')];
+    let allLoaded = false;
     lazyImages.forEach(image => {
-        if (image.offsetTop < window.innerHeight + window.pageYOffset + inAdvance) {
+        if (image.offsetTop < window.innerHeight + window.pageYOffset + window.innerHeight/3) {
             image.src = image.dataset.src;
             image.onload = () => image.classList.add('loaded');
+            allLoaded = true;
+        }else{
+            allLoaded = false;
         }
     });
-
+    if(allLoaded) {
+        window.removeEventListener('scroll', lazyLoad);
+        window.removeEventListener('resize', lazyLoad);
+    }
     // if all loaded removeEventListener
 }
 let container = document.createElement('div');
